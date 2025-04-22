@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WikiGo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.0/axios.min.js"></script>
+</head>
+<body>
+    <div class="container">
+
+        <div class="sidebar">
+            <h2>History</h2>
+            <ul id="history-list">
+            </ul>
+        </div>
+
+        <div class="chat-area">
+            <div id="conversation">
+                <div class="logo">
+                    
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="topic" placeholder="Type your question here...">
+                <button onclick="getSummary()">Submit</button>
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const historyList = document.getElementById("history-list");
+        const conversation = document.getElementById("conversation");
+
+        function getSummary() {
+            const topic = document.getElementById('topic').value;
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.innerHTML = 'Loading...';
+
+            const userBubble = document.createElement("div");
+            userBubble.className = "bubble user";
+            userBubble.innerText = topic;
+            conversation.appendChild(userBubble);
+
+            conversation.scrollTop = conversation.scrollHeight;
+
+            const historyItem = document.createElement("li");
+            historyItem.innerText = topic;
+            historyList.appendChild(historyItem);
+
+            axios.post('/summarize', { topic: topic })
+                .then(response => {
+                    if (response.data.response) {
+                        const botBubble = document.createElement("div");
+                        botBubble.className = "bubble bot";
+                        botBubble.innerText = response.data.response;
+                        conversation.appendChild(botBubble);
+
+                        resultDiv.innerHTML = "";
+                    } else {
+                        resultDiv.innerHTML = '<p>Error: ' + response.data.error + '</p>';
+                    }
+                })
+                .catch(error => {
+                    const errorBubble = document.createElement("div");
+                    errorBubble.className = "bubble bot";
+                    errorBubble.innerText = "An error occurred while processing your request.";
+                    conversation.appendChild(errorBubble);
+
+                    resultDiv.innerHTML = '<p>An error occurred while processing your request.</p>';
+                    console.error(error);
+                });
+        }
+    </script>
+</body>
+</html>
